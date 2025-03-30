@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Predictor - StockAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="logo">StockAI</div>
+        <div class="nav-links">
+            <a href="#" id="logoutBtn">Logout</a>
+        </div>
+    </nav>
+
+    <div class="sidebar">
+        <div class="sidebar-nav">
+            <a href="/dashboard.html" class="nav-item">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="/predictor.html" class="nav-item active">
+                <i class="fas fa-chart-line"></i> Stock Predictor
+            </a>
+            <a href="/portfolio.html" class="nav-item">
+                <i class="fas fa-briefcase"></i> Portfolio
+            </a>
+            <a href="/settings.html" class="nav-item">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="predictor-container">
+            <h1>Stock Price Predictor</h1>
+            <div class="input-section">
+                <input type="text" id="stock-symbol" placeholder="Enter stock symbol (e.g., AAPL)">
+                <select id="popular-stocks">
+                    <option value="">Popular Stocks</option>
+                    <option value="AAPL">Apple (AAPL)</option>
+                    <option value="GOOGL">Google (GOOGL)</option>
+                    <option value="MSFT">Microsoft (MSFT)</option>
+                    <option value="AMZN">Amazon (AMZN)</option>
+                </select>
+                <button id="fetch-data">Predict</button>
+            </div>
+            <div id="loading-spinner"></div>
+            <div id="error-message"></div>
+            <div id="graph-container"></div>
+            <div id="stock-summary"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

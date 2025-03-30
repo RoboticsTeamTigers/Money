@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - StockAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="logo">StockAI</div>
+        <div class="nav-links">
+            <a href="#" id="logoutBtn">Logout</a>
+        </div>
+    </nav>
+
+    <div class="sidebar">
+        <div class="sidebar-nav">
+            <a href="/dashboard.html" class="nav-item">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="/predictor.html" class="nav-item">
+                <i class="fas fa-chart-line"></i> Stock Predictor
+            </a>
+            <a href="/portfolio.html" class="nav-item">
+                <i class="fas fa-briefcase"></i> Portfolio
+            </a>
+            <a href="/settings.html" class="nav-item active">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <h1>Settings</h1>
+        <div class="settings-container">
+            <section class="settings-section">
+                <h2>Accessibility</h2>
+                <div class="setting-item">
+                    <label for="font-size">Font Size</label>
+                    <select id="font-size">
+                        <option value="small">Small</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="large">Large</option>
+                        <option value="x-large">Extra Large</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="contrast">High Contrast</label>
+                    <input type="checkbox" id="contrast">
+                </div>
+                <div class="setting-item">
+                    <label for="animations">Reduce Animations</label>
+                    <input type="checkbox" id="animations">
+                </div>
+                <div class="setting-item">
+                    <label for="dyslexic-font">Dyslexia-Friendly Font</label>
+                    <input type="checkbox" id="dyslexic-font">
+                </div>
+            </section>
+
+            <section class="settings-section">
+                <h2>Display Preferences</h2>
+                <div class="setting-item">
+                    <label for="theme">Theme</label>
+                    <select id="theme">
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                        <option value="blue">Blue Light Filter</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="data-density">Data Density</label>
+                    <select id="data-density">
+                        <option value="compact">Compact</option>
+                        <option value="comfortable" selected>Comfortable</option>
+                        <option value="spacious">Spacious</option>
+                    </select>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

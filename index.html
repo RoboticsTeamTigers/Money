@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+    <nav class="nav-bar">
+        <div class="logo">StockAI</div>
+        <div class="nav-links">
+            <a href="/" class="active">Home</a>
+            <a href="/dashboard.html">Dashboard</a>
+            <a href="/login.html" id="loginBtn">Login</a>
+            <a href="/register.html" id="registerBtn" class="cta-button">Sign Up</a>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <h1>Predict Stock Prices with AI</h1>
+        <p class="hero-text">Advanced machine learning algorithms to help you make better investment decisions</p>
+        <div class="cta-buttons">
+            <a href="/register.html" class="primary-btn">Get Started</a>
+            <a href="/dashboard.html" class="secondary-btn">Try Demo</a>
+        </div>
+    </div>
+
+    <div class="features-section">
+        <h2>Why Choose Us</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <i class="fas fa-robot"></i>
+                <h3>AI-Powered</h3>
+                <p>Advanced machine learning for accurate predictions</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-chart-line"></i>
+                <h3>Real-Time Data</h3>
+                <p>Live market data and instant analysis</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Secure</h3>
+                <p>Your data is always protected</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Powered by Yahoo Finance Data
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://kit.fontawesome.com/your-code.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
