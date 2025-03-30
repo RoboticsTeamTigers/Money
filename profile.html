@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - StockAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="logo">StockAI</div>
+        <div class="nav-links">
+            <div class="profile-menu">
+                <div class="profile-trigger" id="profileTrigger">
+                    <img src="images/default-avatar.png" alt="Profile" id="navProfileAvatar">
+                    <span id="navProfileName">User Name</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <a href="/profile.html" class="active">
+                        <i class="fas fa-user"></i> My Profile
+                    </a>
+                    <a href="/settings.html">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                    <hr>
+                    <a href="#" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar">
+        <div class="sidebar-nav">
+            <a href="/dashboard.html" class="nav-item">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="/predictor.html" class="nav-item">
+                <i class="fas fa-chart-line"></i> Stock Predictor
+            </a>
+            <a href="/portfolio.html" class="nav-item">
+                <i class="fas fa-briefcase"></i> Portfolio
+            </a>
+            <a href="/settings.html" class="nav-item">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="profile-header">
+            <div class="profile-cover" id="profileCover">
+                <button class="edit-cover" id="changeCover">
+                    <i class="fas fa-camera"></i> Change Cover
+                </button>
+            </div>
+            <div class="profile-info">
+                <div class="profile-avatar-container">
+                    <div class="profile-avatar">
+                        <img src="images/default-avatar.png" id="profileAvatar" alt="Profile picture">
+                        <button class="edit-avatar" id="changeAvatar">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                    </div>
+                    <div class="profile-actions">
+                        <button class="edit-profile-btn" id="editProfileBtn">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </button>
+                    </div>
+                </div>
+                <div class="profile-details">
+                    <h1 id="userName">User Name</h1>
+                    <p class="bio" id="userBio">Stock trader and tech enthusiast</p>
+                    <div class="profile-meta">
+                        <span><i class="fas fa-calendar"></i> Joined <span id="joinDate">March 2024</span></span>
+                        <span><i class="fas fa-map-marker-alt"></i> <span id="location">New York, USA</span></span>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">243</span>
+                            <span class="stat-label">Following</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">512</span>
+                            <span class="stat-label">Followers</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">89</span>
+                            <span class="stat-label">Posts</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-content">
+            <div class="profile-tabs">
+                <button class="tab-btn active" data-tab="posts">Posts</button>
+                <button class="tab-btn" data-tab="predictions">Predictions</button>
+                <button class="tab-btn" data-tab="portfolio">Portfolio</button>
+            </div>
+
+            <div class="post-composer">
+                <textarea placeholder="Share your trading insights..."></textarea>
+                <div class="post-actions">
+                    <button class="attach-btn"><i class="fas fa-image"></i> Add Image</button>
+                    <button class="attach-btn"><i class="fas fa-chart-line"></i> Add Stock</button>
+                    <button class="post-btn">Post</button>
+                </div>
+            </div>
+
+            <div class="posts-feed" id="userPosts">
+                <!-- Posts will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load user data and update profile
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userName').textContent = user.name || 'User Name';
+        document.getElementById('navProfileName').textContent = user.name || 'User Name';
+
+        // Profile dropdown toggle
+        const profileTrigger = document.getElementById('profileTrigger');
+        const profileDropdown = document.getElementById('profileDropdown');
+        
+        profileTrigger.addEventListener('click', () => {
+            profileDropdown.classList.toggle('active');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!profileTrigger.contains(e.target)) {
+                profileDropdown.classList.remove('active');
+            }
+        });
+        
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        });
+
+        // Tab switching
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // Add tab content switching logic here
+            });
+        });
+    </script>
+</body>
+</html>

@@ -8,18 +8,41 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <nav class="nav-bar">
+        <a href="index.html" class="logo">StockAI</a>
+        <div class="nav-links">
+            <a href="index.html">Back to Home</a>
+        </div>
+    </nav>
+
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
     <div class="auth-container">
-        <form class="auth-form" id="loginForm">
-            <h2>Welcome Back</h2>
-            <div class="input-group">
-                <input type="email" id="email" required placeholder="Email">
+        <div class="auth-content">
+            <div class="auth-benefits">
+                <h2>Welcome Back!</h2>
+                <ul class="benefits-list">
+                    <li><i class="fas fa-chart-line"></i> AI-Powered Stock Predictions</li>
+                    <li><i class="fas fa-robot"></i> Advanced Trading Algorithms</li>
+                    <li><i class="fas fa-users"></i> Join Our Trading Community</li>
+                </ul>
             </div>
-            <div class="input-group">
-                <input type="password" id="password" required placeholder="Password">
-            </div>
-            <button type="submit" class="auth-button">Login</button>
-            <p class="auth-link">Don't have an account? <a href="/register.html">Sign Up</a></p>
-        </form>
+            <form class="auth-form" id="loginForm">
+                <h2>Welcome Back</h2>
+                <div class="input-group">
+                    <input type="email" id="email" required placeholder="Email">
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" required placeholder="Password">
+                </div>
+                <button type="submit" class="auth-button">Login</button>
+                <p class="auth-link">Don't have an account? <a href="/register.html">Sign Up</a></p>
+            </form>
+        </div>
     </div>
     <script>
         document.getElementById('loginForm').addEventListener('submit', async (e) => {

@@ -308,6 +308,66 @@ function calculateBollingerBands(prices, period = 20) {
     };
 }
 
+// Add new endpoints for social features
+app.post('/api/posts', async (req, res) => {
+    try {
+        const { userId, content, image } = req.body;
+        const post = {
+            id: Date.now(),
+            userId,
+            content,
+            image,
+            likes: 0,
+            comments: [],
+            timestamp: new Date().toISOString()
+        };
+        
+        // Save post to database/file
+        const posts = await loadPosts();
+        posts.push(post);
+        await savePosts(posts);
+        
+        res.json({ success: true, post });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create post' });
+    }
+});
+
+app.get('/api/posts/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const posts = await loadPosts();
+        const userPosts = posts.filter(post => post.userId === userId);
+        res.json(userPosts);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch posts' });
+    }
+});
+
+// Add profile endpoints
+app.post('/api/profile/update', async (req, res) => {
+    try {
+        const { userId, name, bio, avatar } = req.body;
+        const users = await loadUsers();
+        const userIndex = users.findIndex(u => u.email === userId);
+        
+        if (userIndex >= 0) {
+            users[userIndex] = {
+                ...users[userIndex],
+                name: name || users[userIndex].name,
+                bio: bio || users[userIndex].bio,
+                avatar: avatar || users[userIndex].avatar
+            };
+            await saveUsers(users);
+            res.json({ success: true });
+        } else {
+            res.status(404).json({ error: 'User not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update profile' });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });

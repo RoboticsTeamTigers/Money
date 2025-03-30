@@ -1,4 +1,9 @@
 // Add at the top of the file
+// Check authentication
+if (!localStorage.getItem('user')) {
+    window.location.href = '/login.html';
+}
+
 const summary = document.getElementById('stock-summary');
 const errorMessage = document.getElementById('error-message');
 const spinner = document.getElementById('loading-spinner');

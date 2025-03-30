@@ -12,7 +12,25 @@
     <nav class="nav-bar">
         <div class="logo">StockAI</div>
         <div class="nav-links">
-            <a href="#" id="logoutBtn">Logout</a>
+            <div class="profile-menu">
+                <div class="profile-trigger" id="profileTrigger">
+                    <img src="images/default-avatar.png" alt="Profile" id="navProfileAvatar">
+                    <span id="navProfileName">User Name</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <a href="/profile.html">
+                        <i class="fas fa-user"></i> My Profile
+                    </a>
+                    <a href="/settings.html">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                    <hr>
+                    <a href="#" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -57,5 +75,27 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('navProfileName').textContent = user.name || 'User Name';
+        
+        const profileTrigger = document.getElementById('profileTrigger');
+        const profileDropdown = document.getElementById('profileDropdown');
+        
+        profileTrigger.addEventListener('click', () => {
+            profileDropdown.classList.toggle('active');
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!profileTrigger.contains(e.target)) {
+                profileDropdown.classList.remove('active');
+            }
+        });
+        
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        });
+    </script>
 </body>
 </html>

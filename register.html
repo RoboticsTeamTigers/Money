@@ -8,21 +8,46 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <nav class="nav-bar">
+        <a href="index.html" class="logo">StockAI</a>
+        <div class="nav-links">
+            <a href="index.html">Back to Home</a>
+        </div>
+    </nav>
+
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
     <div class="auth-container">
-        <form class="auth-form" id="registerForm">
-            <h2>Create Account</h2>
-            <div class="input-group">
-                <input type="text" id="name" required placeholder="Full Name">
+        <div class="auth-content">
+            <div class="auth-benefits">
+                <h2>Join StockAI Today</h2>
+                <ul class="benefits-list">
+                    <li><i class="fas fa-chart-line"></i> Real-time Market Analysis</li>
+                    <li><i class="fas fa-brain"></i> AI-Powered Insights</li>
+                    <li><i class="fas fa-shield-alt"></i> Secure Trading Platform</li>
+                    <li><i class="fas fa-users"></i> Active Trading Community</li>
+                    <li><i class="fas fa-mobile-alt"></i> Mobile-Friendly Platform</li>
+                </ul>
             </div>
-            <div class="input-group">
-                <input type="email" id="email" required placeholder="Email">
-            </div>
-            <div class="input-group">
-                <input type="password" id="password" required placeholder="Password">
-            </div>
-            <button type="submit" class="auth-button">Sign Up</button>
-            <p class="auth-link">Already have an account? <a href="/login.html">Login</a></p>
-        </form>
+            <form class="auth-form" id="registerForm">
+                <h2>Create Account</h2>
+                <div class="input-group">
+                    <input type="text" id="name" required placeholder="Full Name">
+                </div>
+                <div class="input-group">
+                    <input type="email" id="email" required placeholder="Email">
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" required placeholder="Password">
+                </div>
+                <button type="submit" class="auth-button">Sign Up</button>
+                <p class="auth-link">Already have an account? <a href="/login.html">Login</a></p>
+            </form>
+        </div>
     </div>
     <script>
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
