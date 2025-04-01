@@ -12,7 +12,28 @@ const port = 3000;
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1D7ovONGIaclZMs-6i5FrMCJFHzP0DMF01f7uXsjk-2s/edit?usp=sharing';
 const SHEET_DATA_URL = SHEET_URL.replace('/edit?usp=sharing', '/gviz/tq?tqx=out:csv');
 
-app.use(cors());
+app.use(cors({
+    origin: function(origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if(!origin) return callback(null, true);
+        
+        // List of allowed origins
+        const allowedOrigins = [
+            'http://localhost:3000',
+            'http://127.0.0.1:3000',
+            // Add your production domain here, for example:
+            'https://yourdomain.com',
+            'https://www.yourdomain.com'
+        ];
+        
+        if(allowedOrigins.indexOf(origin) === -1){
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    credentials: true
+}));
 app.use(express.static('.'));
 app.use(express.json());
 

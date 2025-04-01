@@ -50,6 +50,12 @@
         </div>
     </div>
     <script>
+        const API_CONFIG = {
+            baseUrl: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:3000'
+                : window.location.origin
+        };
+
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('name').value;
@@ -57,7 +63,7 @@
             const password = document.getElementById('password').value;
 
             try {
-                const response = await fetch('http://localhost:3000/api/auth/register', {
+                const response = await fetch(`${API_CONFIG.baseUrl}/api/auth/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, email, password })

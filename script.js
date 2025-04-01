@@ -4,6 +4,12 @@ if (!localStorage.getItem('user')) {
     window.location.href = '/login.html';
 }
 
+const API_CONFIG = {
+    baseUrl: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000'
+        : window.location.origin
+};
+
 const summary = document.getElementById('stock-summary');
 const errorMessage = document.getElementById('error-message');
 const spinner = document.getElementById('loading-spinner');
@@ -31,7 +37,7 @@ document.getElementById('fetch-data').addEventListener('click', async () => {
     }
 
     try {
-        const response = await fetch(`http://localhost:3000/api/stock/${symbol}`);
+        const response = await fetch(`${API_CONFIG.baseUrl}/api/stock/${symbol}`);
         const data = await response.json();
 
         // Validate the data
