@@ -291,10 +291,12 @@ footer {
     backdrop-filter: blur(10px);
     width: 90%; /* Use percentage for width */
     max-width: 500px; /* Increase max width for larger monitors */
+    box-sizing: border-box;
 }
-
 .input-group {
     margin-bottom: 1rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .input-group input {
@@ -304,6 +306,7 @@ footer {
     border-radius: 0.5rem;
     background: rgba(255, 255, 255, 0.05);
     color: #fff;
+    box-sizing: border-box;
 }
 
 .auth-button {
