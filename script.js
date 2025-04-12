@@ -1,5 +1,50 @@
-// Check authentication
-if (!localStorage.getItem('user')) {
+// Create a simple in-memory cache directly in this file
+const cacheService = {
+    cache: new Map(),
+    expirationTime: 5 * 60 * 1000, // 5 minutes
+    debug: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+    stats: { hits: 0, misses: 0, sets: 0 },
+
+    get(key) {
+        const item = this.cache.get(key);
+        
+        if (item && Date.now() < item.expiration) {
+            this.stats.hits++;
+            if (this.debug) console.log(`✅ Cache HIT: ${key}`);
+            return item.value;
+        }
+        
+        this.stats.misses++;
+        if (this.debug) console.log(`❌ Cache MISS: ${key}`);
+        
+        if (item) this.cache.delete(key);
+        
+        return null;
+    },
+
+    set(key, value) {
+        const expiration = Date.now() + this.expirationTime;
+        this.cache.set(key, { value, expiration });
+        this.stats.sets++;
+        
+        if (this.debug) console.log(`📝 Cache SET: ${key}`);
+    }
+};
+
+// Debugging helper
+function logError(message, error) {
+    console.error(`${message}:`, error);
+    if (errorMessage) {
+        errorMessage.textContent = `Error: ${message} - ${error.message || 'Unknown error'}`;
+        errorMessage.style.display = 'block';
+    }
+}
+
+// Check authentication - but don't redirect if we're on the login page
+if (!localStorage.getItem('user') && 
+    !window.location.pathname.includes('login.html') && 
+    !window.location.pathname.includes('register.html') && 
+    !window.location.pathname.includes('index.html')) {
     window.location.href = '/login.html';
 }
 
@@ -9,35 +54,75 @@ const API_CONFIG = {
         : window.location.origin
 };
 
+// Get DOM elements safely with null checks
 const summary = document.getElementById('stock-summary');
 const errorMessage = document.getElementById('error-message');
 const spinner = document.getElementById('loading-spinner');
 const graphContainer = document.getElementById('graph-container');
+const popularStocksSelect = document.getElementById('popular-stocks');
+const fetchDataButton = document.getElementById('fetch-data');
+const stockSymbolInput = document.getElementById('stock-symbol');
 
-document.getElementById('popular-stocks').addEventListener('change', (event) => {
-    document.getElementById('stock-symbol').value = event.target.value;
-});
+// Only add event listeners if elements exist
+if (popularStocksSelect) {
+    popularStocksSelect.addEventListener('change', (event) => {
+        if (stockSymbolInput) {
+            stockSymbolInput.value = event.target.value;
+        }
+    });
+}
 
-// Update the click handler to remove redundant declarations
-document.getElementById('fetch-data').addEventListener('click', async () => {
-    const symbol = document.getElementById('stock-symbol').value.trim().toUpperCase();
+// Update the click handler to be more robust
+if (fetchDataButton) {
+    fetchDataButton.addEventListener('click', fetchStockData);
+}
 
-    // Clear previous state
-    errorMessage.style.display = 'none';
-    spinner.style.display = 'block';
-    summary.style.display = 'none';
-    graphContainer.innerHTML = '';
-    
-    if (!symbol) {
-        errorMessage.textContent = 'Please enter a stock symbol.';
-        errorMessage.style.display = 'block';
-        spinner.style.display = 'none';
-        return;
-    }
-
+// Main function to fetch stock data
+async function fetchStockData() {
     try {
-        const response = await fetch(`${API_CONFIG.baseUrl}/api/stock/${symbol}`);
-        const data = await response.json();
+        if (!stockSymbolInput) {
+            throw new Error('Stock symbol input not found');
+        }
+
+        const symbol = stockSymbolInput.value.trim().toUpperCase();
+
+        // Clear previous state
+        if (errorMessage) errorMessage.style.display = 'none';
+        if (spinner) spinner.style.display = 'block';
+        if (summary) summary.style.display = 'none';
+        if (graphContainer) graphContainer.innerHTML = '';
+        
+        if (!symbol) {
+            if (errorMessage) {
+                errorMessage.textContent = 'Please enter a stock symbol.';
+                errorMessage.style.display = 'block';
+            }
+            if (spinner) spinner.style.display = 'none';
+            return;
+        }
+
+        console.log(`Fetching data for ${symbol}...`);
+
+        // Check cache first
+        const cacheKey = `stock_${symbol}`;
+        let data = cacheService.get(cacheKey);
+        
+        if (!data) {
+            // Cache miss, fetch from API
+            console.log(`Making API request to ${API_CONFIG.baseUrl}/api/stock/${symbol}`);
+            const response = await fetch(`${API_CONFIG.baseUrl}/api/stock/${symbol}`);
+            
+            // Log response for debugging
+            console.log('API Response status:', response.status);
+            
+            data = await response.json();
+            console.log('API data received:', data ? 'yes' : 'no');
+            
+            // Cache the response if valid
+            if (data && Array.isArray(data.c) && data.c.length > 0) {
+                cacheService.set(cacheKey, data);
+            }
+        }
 
         // Validate the data
         if (!data || !Array.isArray(data.c) || data.c.length === 0) {
@@ -54,6 +139,8 @@ document.getElementById('fetch-data').addEventListener('click', async () => {
             .slice(0, cleanPrices.length)
             .map(t => new Date(t * 1000).toLocaleDateString());
 
+        console.log(`Processing ${cleanPrices.length} data points...`);
+
         // Generate predictions and render
         const predictedPrices = await generatePredictions(cleanPrices);
         renderGraph(dates, cleanPrices, predictedPrices);
@@ -63,17 +150,16 @@ document.getElementById('fetch-data').addEventListener('click', async () => {
         await updateSummary(symbol, data, predictedPrices, technicalIndicators);
 
         // Show the results
-        summary.style.display = 'block';
-        graphContainer.classList.add('visible');
+        if (summary) summary.style.display = 'block';
+        if (graphContainer) graphContainer.classList.add('visible');
         
+        console.log('Stock data processing complete');
     } catch (error) {
-        console.error('Error:', error);
-        errorMessage.textContent = error.message;
-        errorMessage.style.display = 'block';
+        logError('Error fetching stock data', error);
     } finally {
-        spinner.style.display = 'none';
+        if (spinner) spinner.style.display = 'none';
     }
-});
+}
 
 async function generatePredictions(prices) {
     if (prices.length < 30) return prices;
@@ -366,6 +452,7 @@ function renderGraph(dates, prices, predictedPrices) {
                                     currency: 'USD'
                                 }).format(context.parsed.y);
                                 
+
                                 // Add trend analysis for buy/sell points
                                 if (context.dataset.label === 'Buy Signals') {
                                     label += ' - Strong buy signal';

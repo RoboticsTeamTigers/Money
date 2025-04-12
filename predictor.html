@@ -55,6 +55,7 @@
             color: #e0e0e0;
         }
     </style>
+    <script src="debug-helper.js"></script>
 </head>
 <body>
     <nav class="nav-bar">
@@ -162,44 +163,85 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        document.getElementById('navProfileName').textContent = user.name || 'User Name';
-        
-        const profileTrigger = document.getElementById('profileTrigger');
-        const profileDropdown = document.getElementById('profileDropdown');
-        
-        profileTrigger.addEventListener('click', () => {
-            profileDropdown.classList.toggle('active');
-        });
-        
-        document.addEventListener('click', (e) => {
-            if (!profileTrigger.contains(e.target)) {
-                profileDropdown.classList.remove('active');
-            }
-        });
-        
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('user');
-            window.location.href = '/login.html';
-        });
-        
-        // Add click event listeners to stock cards
-        document.querySelectorAll('.stock-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const symbol = card.getAttribute('data-symbol');
-                document.getElementById('stock-symbol').value = symbol;
-                document.getElementById('fetch-data').click(); // Trigger the fetch
-            });
-        });
-        
-        // Load a default stock (Apple) when the page loads
-        window.addEventListener('DOMContentLoaded', () => {
-            // Small delay to ensure everything is loaded
+        // Wait for the DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // Set up user profile
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const nameElement = document.getElementById('navProfileName');
+                if (nameElement) {
+                    nameElement.textContent = user.name || 'User Name';
+                }
+                
+                // Profile dropdown functionality
+                const profileTrigger = document.getElementById('profileTrigger');
+                const profileDropdown = document.getElementById('profileDropdown');
+                
+                if (profileTrigger && profileDropdown) {
+                    profileTrigger.addEventListener('click', () => {
+                        profileDropdown.classList.toggle('active');
+                    });
+                    
+                    document.addEventListener('click', (e) => {
+                        if (profileTrigger && !profileTrigger.contains(e.target)) {
+                            profileDropdown.classList.remove('active');
+                        }
+                    });
+                }
+                
+                // Logout functionality
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', () => {
+                        localStorage.removeItem('user');
+                        window.location.href = '/login.html';
+                    });
+                }
+                
+                // Add click event listeners to stock cards
+                const stockCards = document.querySelectorAll('.stock-card');
+                stockCards.forEach(card => {
+                    card.addEventListener('click', () => {
+                        const symbol = card.getAttribute('data-symbol');
+                        const symbolInput = document.getElementById('stock-symbol');
+                        const fetchBtn = document.getElementById('fetch-data');
+                        
+                        if (symbolInput && fetchBtn) {
+                            symbolInput.value = symbol;
+                            console.log(`Stock card clicked: ${symbol}`);
+                            // Check if fetchStockData is defined
+                            if (typeof fetchStockData === 'function') {
+                                fetchStockData();
+                            } else {
+                                // Fallback to click event
+                                fetchBtn.click();
+                            }
+                        }
+                    });
+                });
+                
+            // Load a default stock (Apple) when the page loads
+            console.log('Setting up default stock loading...');
             setTimeout(() => {
-                document.getElementById('stock-symbol').value = 'AAPL';
-                document.getElementById('fetch-data').click();
-            }, 300);
-        });
-    </script>
+                const symbolInput = document.getElementById('stock-symbol');
+                const fetchBtn = document.getElementById('fetch-data');
+                
+                if (symbolInput && fetchBtn) {
+                    symbolInput.value = 'AAPL';
+                    console.log('Loading default stock: AAPL');
+                    // Check if fetchStockData is defined
+                    if (typeof fetchStockData === 'function') {
+                        fetchStockData();
+                    } else {
+                        // Fallback to click event
+                        fetchBtn.click();
+                    }
+                }
+            }, 500); // Increased timeout to ensure everything is loaded
+        } catch (error) {
+            console.error('Error in predictor.html script:', error);
+        }
+    });
+</script>
 </body>
 </html>
