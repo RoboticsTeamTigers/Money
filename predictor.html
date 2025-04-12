@@ -7,6 +7,54 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <style>
+        .popular-stocks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stock-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        
+        .stock-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+        
+        .stock-card .icon {
+            font-size: 24px;
+            color: #007bff;
+            margin-bottom: 8px;
+        }
+        
+        .stock-card .symbol {
+            font-weight: bold;
+            color: #ffffff;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .stock-card .company {
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .section-title {
+            margin: 20px 0 15px 0;
+            font-size: 20px;
+            color: #e0e0e0;
+        }
+    </style>
 </head>
 <body>
     <nav class="nav-bar">
@@ -54,6 +102,42 @@
     <div class="main-content">
         <div class="predictor-container">
             <h1>Stock Price Predictor</h1>
+            
+            <h2 class="section-title">Popular Stocks</h2>
+            <div class="popular-stocks-grid">
+                <div class="stock-card" data-symbol="AAPL">
+                    <i class="fab fa-apple icon"></i>
+                    <div class="symbol">AAPL</div>
+                    <div class="company">Apple</div>
+                </div>
+                <div class="stock-card" data-symbol="MSFT">
+                    <i class="fab fa-microsoft icon"></i>
+                    <div class="symbol">MSFT</div>
+                    <div class="company">Microsoft</div>
+                </div>
+                <div class="stock-card" data-symbol="GOOGL">
+                    <i class="fab fa-google icon"></i>
+                    <div class="symbol">GOOGL</div>
+                    <div class="company">Alphabet</div>
+                </div>
+                <div class="stock-card" data-symbol="AMZN">
+                    <i class="fab fa-amazon icon"></i>
+                    <div class="symbol">AMZN</div>
+                    <div class="company">Amazon</div>
+                </div>
+                <div class="stock-card" data-symbol="META">
+                    <i class="fab fa-facebook icon"></i>
+                    <div class="symbol">META</div>
+                    <div class="company">Meta</div>
+                </div>
+                <div class="stock-card" data-symbol="TSLA">
+                    <i class="fas fa-car icon"></i>
+                    <div class="symbol">TSLA</div>
+                    <div class="company">Tesla</div>
+                </div>
+            </div>
+            
+            <h2 class="section-title">Custom Stock Search</h2>
             <div class="input-section">
                 <input type="text" id="stock-symbol" placeholder="Enter stock symbol (e.g., AAPL)">
                 <select id="popular-stocks">
@@ -62,6 +146,8 @@
                     <option value="GOOGL">Google (GOOGL)</option>
                     <option value="MSFT">Microsoft (MSFT)</option>
                     <option value="AMZN">Amazon (AMZN)</option>
+                    <option value="META">Meta (META)</option>
+                    <option value="TSLA">Tesla (TSLA)</option>
                 </select>
                 <button id="fetch-data">Predict</button>
             </div>
@@ -95,6 +181,24 @@
         document.getElementById('logoutBtn').addEventListener('click', () => {
             localStorage.removeItem('user');
             window.location.href = '/login.html';
+        });
+        
+        // Add click event listeners to stock cards
+        document.querySelectorAll('.stock-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const symbol = card.getAttribute('data-symbol');
+                document.getElementById('stock-symbol').value = symbol;
+                document.getElementById('fetch-data').click(); // Trigger the fetch
+            });
+        });
+        
+        // Load a default stock (Apple) when the page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            // Small delay to ensure everything is loaded
+            setTimeout(() => {
+                document.getElementById('stock-symbol').value = 'AAPL';
+                document.getElementById('fetch-data').click();
+            }, 300);
         });
     </script>
 </body>
