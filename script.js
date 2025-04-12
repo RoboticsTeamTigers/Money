@@ -2,7 +2,8 @@
 const cacheService = {
     cache: new Map(),
     expirationTime: 5 * 60 * 1000, // 5 minutes
-    debug: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+    // debug: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+    debug: false,
     stats: { hits: 0, misses: 0, sets: 0 },
 
     get(key) {
@@ -119,7 +120,7 @@ async function fetchStockData() {
             console.log('API data received:', data ? 'yes' : 'no');
             
             // Cache the response if valid
-            if (data && Array.isArray(data.c) && data.c.length > 0) {
+            if (data && data.c && Array.isArray(data.c) && data.c.length > 0) {
                 cacheService.set(cacheKey, data);
             }
         }
@@ -135,9 +136,9 @@ async function fetchStockData() {
             throw new Error('No valid price data available');
         }
 
-        const dates = data.t
-            .slice(0, cleanPrices.length)
-            .map(t => new Date(t * 1000).toLocaleDateString());
+        const dates = Array.isArray(data.t)
+            ? data.t.slice(0, cleanPrices.length).map(t => new Date(t * 1000).toLocaleDateString())
+            : [];
 
         console.log(`Processing ${cleanPrices.length} data points...`);
 
