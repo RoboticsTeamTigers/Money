@@ -1,6 +1,51 @@
-// Add at the top of the file
-// Check authentication
-if (!localStorage.getItem('user')) {
+// Create a simple in-memory cache directly in this file
+const cacheService = {
+    cache: new Map(),
+    expirationTime: 5 * 60 * 1000, // 5 minutes
+    // debug: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+    debug: false,
+    stats: { hits: 0, misses: 0, sets: 0 },
+
+    get(key) {
+        const item = this.cache.get(key);
+        
+        if (item && Date.now() < item.expiration) {
+            this.stats.hits++;
+            if (this.debug) console.log(`✅ Cache HIT: ${key}`);
+            return item.value;
+        }
+        
+        this.stats.misses++;
+        if (this.debug) console.log(`❌ Cache MISS: ${key}`);
+        
+        if (item) this.cache.delete(key);
+        
+        return null;
+    },
+
+    set(key, value) {
+        const expiration = Date.now() + this.expirationTime;
+        this.cache.set(key, { value, expiration });
+        this.stats.sets++;
+        
+        if (this.debug) console.log(`📝 Cache SET: ${key}`);
+    }
+};
+
+// Debugging helper
+function logError(message, error) {
+    console.error(`${message}:`, error);
+    if (errorMessage) {
+        errorMessage.textContent = `Error: ${message} - ${error.message || 'Unknown error'}`;
+        errorMessage.style.display = 'block';
+    }
+}
+
+// Check authentication - but don't redirect if we're on the login page
+if (!localStorage.getItem('user') && 
+    !window.location.pathname.includes('login.html') && 
+    !window.location.pathname.includes('register.html') && 
+    !window.location.pathname.includes('index.html')) {
     window.location.href = '/login.html';
 }
 
@@ -10,35 +55,75 @@ const API_CONFIG = {
         : window.location.origin
 };
 
+// Get DOM elements safely with null checks
 const summary = document.getElementById('stock-summary');
 const errorMessage = document.getElementById('error-message');
 const spinner = document.getElementById('loading-spinner');
 const graphContainer = document.getElementById('graph-container');
+const popularStocksSelect = document.getElementById('popular-stocks');
+const fetchDataButton = document.getElementById('fetch-data');
+const stockSymbolInput = document.getElementById('stock-symbol');
 
-document.getElementById('popular-stocks').addEventListener('change', (event) => {
-    document.getElementById('stock-symbol').value = event.target.value;
-});
+// Only add event listeners if elements exist
+if (popularStocksSelect) {
+    popularStocksSelect.addEventListener('change', (event) => {
+        if (stockSymbolInput) {
+            stockSymbolInput.value = event.target.value;
+        }
+    });
+}
 
-// Update the click handler to remove redundant declarations
-document.getElementById('fetch-data').addEventListener('click', async () => {
-    const symbol = document.getElementById('stock-symbol').value.trim().toUpperCase();
+// Update the click handler to be more robust
+if (fetchDataButton) {
+    fetchDataButton.addEventListener('click', fetchStockData);
+}
 
-    // Clear previous state
-    errorMessage.style.display = 'none';
-    spinner.style.display = 'block';
-    summary.style.display = 'none';
-    graphContainer.innerHTML = '';
-    
-    if (!symbol) {
-        errorMessage.textContent = 'Please enter a stock symbol.';
-        errorMessage.style.display = 'block';
-        spinner.style.display = 'none';
-        return;
-    }
-
+// Main function to fetch stock data
+async function fetchStockData() {
     try {
-        const response = await fetch(`${API_CONFIG.baseUrl}/api/stock/${symbol}`);
-        const data = await response.json();
+        if (!stockSymbolInput) {
+            throw new Error('Stock symbol input not found');
+        }
+
+        const symbol = stockSymbolInput.value.trim().toUpperCase();
+
+        // Clear previous state
+        if (errorMessage) errorMessage.style.display = 'none';
+        if (spinner) spinner.style.display = 'block';
+        if (summary) summary.style.display = 'none';
+        if (graphContainer) graphContainer.innerHTML = '';
+        
+        if (!symbol) {
+            if (errorMessage) {
+                errorMessage.textContent = 'Please enter a stock symbol.';
+                errorMessage.style.display = 'block';
+            }
+            if (spinner) spinner.style.display = 'none';
+            return;
+        }
+
+        console.log(`Fetching data for ${symbol}...`);
+
+        // Check cache first
+        const cacheKey = `stock_${symbol}`;
+        let data = cacheService.get(cacheKey);
+        
+        if (!data) {
+            // Cache miss, fetch from API
+            console.log(`Making API request to ${API_CONFIG.baseUrl}/api/stock/${symbol}`);
+            const response = await fetch(`${API_CONFIG.baseUrl}/api/stock/${symbol}`);
+            
+            // Log response for debugging
+            console.log('API Response status:', response.status);
+            
+            data = await response.json();
+            console.log('API data received:', data ? 'yes' : 'no');
+            
+            // Cache the response if valid
+            if (data && data.c && Array.isArray(data.c) && data.c.length > 0) {
+                cacheService.set(cacheKey, data);
+            }
+        }
 
         // Validate the data
         if (!data || !Array.isArray(data.c) || data.c.length === 0) {
@@ -51,9 +136,11 @@ document.getElementById('fetch-data').addEventListener('click', async () => {
             throw new Error('No valid price data available');
         }
 
-        const dates = data.t
-            .slice(0, cleanPrices.length)
-            .map(t => new Date(t * 1000).toLocaleDateString());
+        const dates = Array.isArray(data.t)
+            ? data.t.slice(0, cleanPrices.length).map(t => new Date(t * 1000).toLocaleDateString())
+            : [];
+
+        console.log(`Processing ${cleanPrices.length} data points...`);
 
         // Generate predictions and render
         const predictedPrices = await generatePredictions(cleanPrices);
@@ -64,17 +151,16 @@ document.getElementById('fetch-data').addEventListener('click', async () => {
         await updateSummary(symbol, data, predictedPrices, technicalIndicators);
 
         // Show the results
-        summary.style.display = 'block';
-        graphContainer.classList.add('visible');
+        if (summary) summary.style.display = 'block';
+        if (graphContainer) graphContainer.classList.add('visible');
         
+        console.log('Stock data processing complete');
     } catch (error) {
-        console.error('Error:', error);
-        errorMessage.textContent = error.message;
-        errorMessage.style.display = 'block';
+        logError('Error fetching stock data', error);
     } finally {
-        spinner.style.display = 'none';
+        if (spinner) spinner.style.display = 'none';
     }
-});
+}
 
 async function generatePredictions(prices) {
     if (prices.length < 30) return prices;
@@ -240,6 +326,9 @@ function renderGraph(dates, prices, predictedPrices) {
     const validPrices = prices.filter(p => p !== null);
     const validDates = dates.slice(0, validPrices.length);
 
+    // Calculate buy/sell signals
+    const signals = calculateTradingSignals(validPrices);
+    
     // Create separate arrays for historical and predicted data
     const historicalData = validPrices.map((price, i) => ({
         x: validDates[i],
@@ -250,6 +339,18 @@ function renderGraph(dates, prices, predictedPrices) {
     const predictedData = new Array(validPrices.length - 1).fill(null);
     const futurePredictions = predictedPrices.slice(validPrices.length - 1);
     predictedData.push(...futurePredictions);
+    
+    // Create buy signals dataset
+    const buySignals = signals.buySignals.map(index => ({
+        x: validDates[index],
+        y: validPrices[index]
+    }));
+    
+    // Create sell signals dataset
+    const sellSignals = signals.sellSignals.map(index => ({
+        x: validDates[index],
+        y: validPrices[index]
+    }));
 
     new Chart(ctx, {
         type: 'line',
@@ -278,6 +379,31 @@ function renderGraph(dates, prices, predictedPrices) {
                     tension: 0.1,
                     pointRadius: 2,
                     pointHoverRadius: 5,
+                },
+                {
+                    label: 'Buy Signals',
+                    data: buySignals,
+                    borderColor: 'rgba(0, 0, 0, 0)',
+                    backgroundColor: 'rgba(0, 0, 0, 0)',
+                    pointBackgroundColor: '#00ff00',
+                    pointBorderColor: '#008800',
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointStyle: 'triangle',
+                    showLine: false
+                },
+                {
+                    label: 'Sell Signals',
+                    data: sellSignals,
+                    borderColor: 'rgba(0, 0, 0, 0)',
+                    backgroundColor: 'rgba(0, 0, 0, 0)',
+                    pointBackgroundColor: '#ff0000',
+                    pointBorderColor: '#880000',
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointStyle: 'triangle',
+                    pointRotation: 180,
+                    showLine: false
                 }
             ]
         },
@@ -317,7 +443,41 @@ function renderGraph(dates, prices, predictedPrices) {
                     intersect: false,
                     callbacks: {
                         label: function(context) {
-                            return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}`;
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('en-US', {
+                                    style: 'currency',
+                                    currency: 'USD'
+                                }).format(context.parsed.y);
+                                
+
+                                // Add trend analysis for buy/sell points
+                                if (context.dataset.label === 'Buy Signals') {
+                                    label += ' - Strong buy signal';
+                                } else if (context.dataset.label === 'Sell Signals') {
+                                    label += ' - Strong sell signal';
+                                }
+                            }
+                            return label;
+                        }
+                    }
+                },
+                annotation: {
+                    annotations: {
+                        line1: {
+                            type: 'line',
+                            yMin: predictedPrices[predictedPrices.length - 1],
+                            yMax: predictedPrices[predictedPrices.length - 1],
+                            borderColor: 'rgb(255, 99, 132)',
+                            borderWidth: 2,
+                            label: {
+                                backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                                content: 'Projected End Price',
+                                enabled: true
+                            }
                         }
                     }
                 }
@@ -335,16 +495,142 @@ function renderGraph(dates, prices, predictedPrices) {
     });
 }
 
-// Add sentiment analysis
-async function analyzeSentiment(symbol) {
-    const sentiment = {
-        score: Math.random() * 2 - 1, // Simulated sentiment score
-        signals: ['Volume Trend', 'Price Momentum', 'Market Trend']
+// Add new function to calculate trading signals
+function calculateTradingSignals(prices) {
+    const buySignals = [];
+    const sellSignals = [];
+    
+    // Minimum length requirement for signal calculation
+    if (prices.length < 30) {
+        return { buySignals, sellSignals };
+    }
+    
+    // Calculate indicators for signal generation
+    const rsiValues = calculateRSIArray(prices, 14);
+    const ema20 = calculateEMA(prices, 20);
+    const ema50 = calculateEMA(prices, 50);
+    const macd = calculateMACDArray(prices);
+    const bollingerBands = prices.map((price, i) => {
+        return i >= 20 ? calculateBollingerBands(prices.slice(i-20, i+1)) : null;
+    });
+    
+    // Generate signals based on combined indicators (starting from where we have all indicators)
+    for (let i = 50; i < prices.length; i++) {
+        // Buy signal conditions:
+        // 1. RSI < 30 (oversold)
+        // 2. Price crosses above lower Bollinger Band
+        // 3. EMA20 > EMA50 (uptrend confirmation)
+        // 4. MACD line crosses above signal line
+        const rsiOversold = rsiValues[i] < 30;
+        const priceAboveLowerBB = bollingerBands[i] && prices[i] > bollingerBands[i].lower;
+        const previousPriceBelowLowerBB = bollingerBands[i-1] && prices[i-1] < bollingerBands[i-1].lower;
+        const crossingLowerBB = priceAboveLowerBB && previousPriceBelowLowerBB;
+        const emaUptrend = ema20[i] > ema50[i] && ema20[i-1] <= ema50[i-1];
+        const macdCrossover = macd.line[i] > macd.signal[i] && macd.line[i-1] <= macd.signal[i-1];
+        
+        // Sell signal conditions:
+        // 1. RSI > 70 (overbought)
+        // 2. Price crosses below upper Bollinger Band
+        // 3. EMA20 < EMA50 (downtrend confirmation)
+        // 4. MACD line crosses below signal line
+        const rsiOverbought = rsiValues[i] > 70;
+        const priceBelowUpperBB = bollingerBands[i] && prices[i] < bollingerBands[i].upper;
+        const previousPriceAboveUpperBB = bollingerBands[i-1] && prices[i-1] > bollingerBands[i-1].upper;
+        const crossingUpperBB = priceBelowUpperBB && previousPriceAboveUpperBB;
+        const emaDowntrend = ema20[i] < ema50[i] && ema20[i-1] >= ema50[i-1];
+        const macdCrossUnder = macd.line[i] < macd.signal[i] && macd.line[i-1] >= macd.signal[i-1];
+        
+        // Combine signals for stronger indication
+        if ((rsiOversold && crossingLowerBB) || (emaUptrend && macdCrossover)) {
+            buySignals.push(i);
+        }
+        
+        if ((rsiOverbought && crossingUpperBB) || (emaDowntrend && macdCrossUnder)) {
+            sellSignals.push(i);
+        }
+    }
+    
+    // Only keep the most significant signals (to avoid cluttering the graph)
+    return {
+        buySignals: limitSignals(buySignals, 5),
+        sellSignals: limitSignals(sellSignals, 5)
     };
-    return sentiment;
 }
 
-// Enhanced prediction display
+// Helper function to calculate RSI as an array for the whole price history
+function calculateRSIArray(prices, period = 14) {
+    if (prices.length < period + 1) {
+        return Array(prices.length).fill(50); // Default neutral value
+    }
+    
+    const rsiValues = Array(period).fill(50); // Pad with neutral values
+    const gains = [];
+    const losses = [];
+    
+    // Calculate initial gains and losses
+    for (let i = 1; i < period + 1; i++) {
+        const change = prices[i] - prices[i-1];
+        gains.push(Math.max(0, change));
+        losses.push(Math.max(0, -change));
+    }
+    
+    // Calculate first RS and RSI values
+    let avgGain = gains.reduce((sum, gain) => sum + gain, 0) / period;
+    let avgLoss = losses.reduce((sum, loss) => sum + loss, 0) / period;
+    
+    // Calculate rsiValues for each price point
+    for (let i = period; i < prices.length; i++) {
+        const change = prices[i] - prices[i-1];
+        const currentGain = Math.max(0, change);
+        const currentLoss = Math.max(0, -change);
+        
+        // Use smoothed averages
+        avgGain = ((avgGain * (period - 1)) + currentGain) / period;
+        avgLoss = ((avgLoss * (period - 1)) + currentLoss) / period;
+        
+        const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+        rsiValues.push(100 - (100 / (1 + rs)));
+    }
+    
+    return rsiValues;
+}
+
+// Calculate MACD array for all prices
+function calculateMACDArray(prices) {
+    const ema12 = calculateEMA(prices, 12);
+    const ema26 = calculateEMA(prices, 26);
+    
+    // Calculate MACD line (EMA12 - EMA26)
+    const macdLine = ema12.map((value, i) => i < 26 ? 0 : value - ema26[i]);
+    
+    // Calculate signal line (9-day EMA of MACD line)
+    const signalLine = calculateEMA(macdLine, 9);
+    
+    return {
+        line: macdLine,
+        signal: signalLine,
+        histogram: macdLine.map((value, i) => value - signalLine[i])
+    };
+}
+
+// Helper function to limit the number of signals to prevent chart clutter
+function limitSignals(signals, maxSignals) {
+    if (signals.length <= maxSignals) {
+        return signals;
+    }
+    
+    // Keep signals spread throughout the chart
+    const step = Math.floor(signals.length / maxSignals);
+    const result = [];
+    
+    for (let i = 0; i < maxSignals; i++) {
+        result.push(signals[Math.min(signals.length - 1, i * step)]);
+    }
+    
+    return result;
+}
+
+// Update the updateSummary function to include signal information
 async function updateSummary(symbol, data, predictions, technicalIndicators) {
     if (!summary) {
         console.error('Summary element not found');
@@ -354,14 +640,40 @@ async function updateSummary(symbol, data, predictions, technicalIndicators) {
     const sentiment = await analyzeSentiment(symbol);
     const marketStatus = getMarketStatus();
     
+    // Calculate signals for recommendation
+    const recentPrices = data.c.slice(-50);
+    const signals = calculateTradingSignals(recentPrices);
+    const lastPrice = recentPrices[recentPrices.length - 1];
+    
+    // Generate recommendation based on signals
+    let recommendation = 'Hold';
+    let recommendationClass = 'neutral';
+    
+    if (signals.buySignals.includes(recentPrices.length - 1) || 
+        signals.buySignals.includes(recentPrices.length - 2)) {
+        recommendation = 'Buy';
+        recommendationClass = 'bullish';
+    } else if (signals.sellSignals.includes(recentPrices.length - 1) || 
+               signals.sellSignals.includes(recentPrices.length - 2)) {
+        recommendation = 'Sell';
+        recommendationClass = 'bearish';
+    }
+    
+    // Calculate projected price change
+    const projectedPrice = predictions[predictions.length - 1];
+    const priceChange = ((projectedPrice - lastPrice) / lastPrice) * 100;
+    
     summary.innerHTML = `
         <div class="prediction-card">
             <h2>${symbol}</h2>
-            <p>Current Price: $${data.currentPrice.toFixed(2)}</p>
+            <p>Current Price: $${lastPrice.toFixed(2)}</p>
             <p>Market Status: <span class="indicator ${marketStatus.trend}">${marketStatus.status}</span></p>
-            <p>AI Prediction: <span class="indicator ${sentiment.score > 0 ? 'bullish' : 'bearish'}">
-                ${sentiment.score > 0 ? '⬆️ Bullish' : '⬇️ Bearish'}
-            </span></p>
+            <p>AI Recommendation: <span class="indicator ${recommendationClass}">${recommendation}</span></p>
+            <p>Projected Price: $${projectedPrice.toFixed(2)} 
+               <span class="indicator ${priceChange >= 0 ? 'bullish' : 'bearish'}">
+                 ${priceChange >= 0 ? '▲' : '▼'} ${Math.abs(priceChange).toFixed(2)}%
+               </span>
+            </p>
             <div class="technical-indicators">
                 ${renderTechnicalIndicators(technicalIndicators)}
             </div>
@@ -370,6 +682,15 @@ async function updateSummary(symbol, data, predictions, technicalIndicators) {
             </div>
         </div>
     `;
+}
+
+// Add sentiment analysis
+async function analyzeSentiment(symbol) {
+    const sentiment = {
+        score: Math.random() * 2 - 1, // Simulated sentiment score
+        signals: ['Volume Trend', 'Price Momentum', 'Market Trend']
+    };
+    return sentiment;
 }
 
 // Add color themes

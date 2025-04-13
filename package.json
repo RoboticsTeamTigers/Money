@@ -4,7 +4,8 @@
   "description": "Stock Price Prediction Web App",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "cors": "2.8.5",
@@ -12,5 +13,11 @@
     "google-spreadsheet": "3.3.0",
     "node-fetch": "2.6.9",
     "ipaddr.js": "2.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  },
+  "nodemonConfig": {
+    "ignore": ["users.json"]
   }
 }

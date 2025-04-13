@@ -7,6 +7,54 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <style>
+        .popular-stocks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stock-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        
+        .stock-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+        
+        .stock-card .icon {
+            font-size: 24px;
+            color: #007bff;
+            margin-bottom: 8px;
+        }
+        
+        .stock-card .symbol {
+            font-weight: bold;
+            color: #ffffff;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .stock-card .company {
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .section-title {
+            margin: 20px 0 15px 0;
+            font-size: 20px;
+            color: #e0e0e0;
+        }
+    </style>
 </head>
 <body>
     <nav class="nav-bar">
@@ -14,7 +62,11 @@
         <div class="nav-links">
             <div class="profile-menu">
                 <div class="profile-trigger" id="profileTrigger">
-                    <img src="images/default-avatar.png" alt="Profile" id="navProfileAvatar">
+                    <svg id="navProfileAvatar" width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="16" cy="16" r="16" fill="#e0e0e0"/>
+                        <circle cx="16" cy="12" r="6" fill="#c0c0c0"/>
+                        <path d="M16 19c-5 0-8 2.5-8 5v2h16v-2c0-2.5-3-5-8-5z" fill="#c0c0c0"/>
+                    </svg>
                     <span id="navProfileName">User Name</span>
                     <i class="fas fa-chevron-down"></i>
                 </div>
@@ -54,6 +106,42 @@
     <div class="main-content">
         <div class="predictor-container">
             <h1>Stock Price Predictor</h1>
+            
+            <h2 class="section-title">Popular Stocks</h2>
+            <div class="popular-stocks-grid">
+                <div class="stock-card" data-symbol="AAPL">
+                    <i class="fab fa-apple icon"></i>
+                    <div class="symbol">AAPL</div>
+                    <div class="company">Apple</div>
+                </div>
+                <div class="stock-card" data-symbol="MSFT">
+                    <i class="fab fa-microsoft icon"></i>
+                    <div class="symbol">MSFT</div>
+                    <div class="company">Microsoft</div>
+                </div>
+                <div class="stock-card" data-symbol="GOOGL">
+                    <i class="fab fa-google icon"></i>
+                    <div class="symbol">GOOGL</div>
+                    <div class="company">Alphabet</div>
+                </div>
+                <div class="stock-card" data-symbol="AMZN">
+                    <i class="fab fa-amazon icon"></i>
+                    <div class="symbol">AMZN</div>
+                    <div class="company">Amazon</div>
+                </div>
+                <div class="stock-card" data-symbol="META">
+                    <i class="fab fa-facebook icon"></i>
+                    <div class="symbol">META</div>
+                    <div class="company">Meta</div>
+                </div>
+                <div class="stock-card" data-symbol="TSLA">
+                    <i class="fas fa-car icon"></i>
+                    <div class="symbol">TSLA</div>
+                    <div class="company">Tesla</div>
+                </div>
+            </div>
+            
+            <h2 class="section-title">Custom Stock Search</h2>
             <div class="input-section">
                 <input type="text" id="stock-symbol" placeholder="Enter stock symbol (e.g., AAPL)">
                 <select id="popular-stocks">
@@ -62,6 +150,8 @@
                     <option value="GOOGL">Google (GOOGL)</option>
                     <option value="MSFT">Microsoft (MSFT)</option>
                     <option value="AMZN">Amazon (AMZN)</option>
+                    <option value="META">Meta (META)</option>
+                    <option value="TSLA">Tesla (TSLA)</option>
                 </select>
                 <button id="fetch-data">Predict</button>
             </div>
@@ -76,26 +166,85 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        document.getElementById('navProfileName').textContent = user.name || 'User Name';
-        
-        const profileTrigger = document.getElementById('profileTrigger');
-        const profileDropdown = document.getElementById('profileDropdown');
-        
-        profileTrigger.addEventListener('click', () => {
-            profileDropdown.classList.toggle('active');
-        });
-        
-        document.addEventListener('click', (e) => {
-            if (!profileTrigger.contains(e.target)) {
-                profileDropdown.classList.remove('active');
-            }
-        });
-        
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('user');
-            window.location.href = '/login.html';
-        });
-    </script>
+        // Wait for the DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // Set up user profile
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const nameElement = document.getElementById('navProfileName');
+                if (nameElement) {
+                    nameElement.textContent = user.name || 'User Name';
+                }
+                
+                // Profile dropdown functionality
+                const profileTrigger = document.getElementById('profileTrigger');
+                const profileDropdown = document.getElementById('profileDropdown');
+                
+                if (profileTrigger && profileDropdown) {
+                    profileTrigger.addEventListener('click', () => {
+                        profileDropdown.classList.toggle('active');
+                    });
+                    
+                    document.addEventListener('click', (e) => {
+                        if (profileTrigger && !profileTrigger.contains(e.target)) {
+                            profileDropdown.classList.remove('active');
+                        }
+                    });
+                }
+                
+                // Logout functionality
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', () => {
+                        localStorage.removeItem('user');
+                        window.location.href = '/login.html';
+                    });
+                }
+                
+                // Add click event listeners to stock cards
+                const stockCards = document.querySelectorAll('.stock-card');
+                stockCards.forEach(card => {
+                    card.addEventListener('click', () => {
+                        const symbol = card.getAttribute('data-symbol');
+                        const symbolInput = document.getElementById('stock-symbol');
+                        const fetchBtn = document.getElementById('fetch-data');
+                        
+                        if (symbolInput && fetchBtn) {
+                            symbolInput.value = symbol;
+                            console.log(`Stock card clicked: ${symbol}`);
+                            // Check if fetchStockData is defined
+                            if (typeof fetchStockData === 'function') {
+                                fetchStockData();
+                            } else {
+                                // Fallback to click event
+                                fetchBtn.click();
+                            }
+                        }
+                    });
+                });
+                
+            // Load a default stock (Apple) when the page loads
+            console.log('Setting up default stock loading...');
+            setTimeout(() => {
+                const symbolInput = document.getElementById('stock-symbol');
+                const fetchBtn = document.getElementById('fetch-data');
+                
+                if (symbolInput && fetchBtn) {
+                    symbolInput.value = 'AAPL';
+                    console.log('Loading default stock: AAPL');
+                    // Check if fetchStockData is defined
+                    if (typeof fetchStockData === 'function') {
+                        fetchStockData();
+                    } else {
+                        // Fallback to click event
+                        fetchBtn.click();
+                    }
+                }
+            }, 500); // Increased timeout to ensure everything is loaded
+        } catch (error) {
+            console.error('Error in predictor.html script:', error);
+        }
+    });
+</script>
 </body>
 </html>

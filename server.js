@@ -10,7 +10,15 @@ const port = 3000;
 
 // Replace with your shared Google Sheet URL
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1D7ovONGIaclZMs-6i5FrMCJFHzP0DMF01f7uXsjk-2s/edit?usp=sharing';
-const SHEET_DATA_URL = SHEET_URL.replace('/edit?usp=sharing', '/gviz/tq?tqx=out:csv');
+const SHEET_DATA_URL = SHEET_URL.includes('/edit?usp=sharing') 
+    ? SHEET_URL.replace('/edit?usp=sharing', '/gviz/tq?tqx=out:csv') 
+    : null;
+
+if (!SHEET_DATA_URL) {
+    console.warn('Invalid Google Sheet URL format. Please check the URL.');
+} else {
+    console.log(`Google Sheet Data URL: ${SHEET_DATA_URL}`);
+}
 
 app.use(cors({
     origin: function(origin, callback) {
@@ -34,6 +42,12 @@ app.use(cors({
     },
     credentials: true
 }));
+
+const authMiddleware = require('./middleware/auth');
+
+// Apply auth middleware before static file serving
+app.use(authMiddleware);
+
 app.use(express.static('.'));
 app.use(express.json());
 
@@ -128,18 +142,22 @@ app.post('/api/auth/register', async (req, res) => {
     }
 });
 
-// Update login endpoint
+// Update login endpoint to set auth cookie
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         const users = await loadUsers();
         
+        const hashedPassword = hashPassword(password);
         const user = users.find(u => 
             u.email === email && 
-            u.password === hashPassword(password)
+            u.password === hashedPassword
         );
 
         if (user) {
+            // Set an authentication cookie (simple implementation)
+            res.setHeader('Set-Cookie', `auth=${email}:${hashedPassword}; Path=/; HttpOnly`);
+            
             res.json({
                 success: true,
                 user: {
@@ -154,6 +172,12 @@ app.post('/api/auth/login', async (req, res) => {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Login failed' });
     }
+});
+
+// Add logout endpoint
+app.get('/api/auth/logout', (req, res) => {
+    res.setHeader('Set-Cookie', 'auth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
+    res.json({ success: true });
 });
 
 app.get('/api/stock/:symbol', async (req, res) => {
